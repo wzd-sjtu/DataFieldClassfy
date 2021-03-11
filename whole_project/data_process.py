@@ -5,38 +5,69 @@ from used_class import hex_str_to_binary_str, \
 import pandas as pd
 import numpy as np
 
+path = ".././source/origin_source/data.csv"
+write_path = ".././source/origin_source/result.csv"
+nrows = 1000000
+
+
+
 class Data():
-    # data_list是基础整理的数据列表
-    data_list = []
-    data_length = 0
-    # classfy_results_list是分好类的数据
-    classfy_results_list = []
-    origin_data = None
+    def __init__(self):
+        self.all_data = pd.read_csv(path,  nrows=nrows)
+        self.CANID_set = set(self.all_data['can_id'])
+        self.result_dict = {}
+        self.result_dict['can_id']=[]
+        self.result_dict['start_bit']=[]
+        self.result_dict['end_bit']=[]
+        self.result_dict['type']=[]
 
-    # 用于存储每一轮迭代中每种类别的最优解
-    const_class = None
-    multi_value_class = None
-    sensor_counter_class = None
-    no_meaning_class = None
 
-    loc = 0
-    final_res = []
-    available_set_section = set([])
-    available_set_section.add((0, 63))
+        for can_id in self.CANID_set:
+            self.can_id = can_id
+            self.origin_data = self.all_data.loc[self.all_data["can_id"] == can_id]
+            self.reset()
+            self.store_data_with_can_matrix()
+            self.set_data_length()
+
+            # 进行分类
+            self.initial_classfy_data()
+            self.process_classfy_data()
+
+            # 贪心算法求最优解
+            self.greedy_find_solution()
+
+            # 显示
+            self.save_results()
+        
+        self.result_dataframe = pd.DataFrame(data = self.result_dict,columns=['can_id','start_bit','end_bit','type'])
+        self.result_dataframe.to_csv(write_path,index=False,sep=',')
+    
+    def reset(self):
+        self.data_list = []
+        self.data_length = 0
+        # classfy_results_list是分好类的数据
+        self.classfy_results_list = []
+
+        # 用于存储每一轮迭代中每种类别的最优解
+        self.const_class = None
+        self.multi_value_class = None
+        self.sensor_counter_class = None
+        self.no_meaning_class = None
+
+        self.loc = 0
+        self.final_res = []
+        self.available_set_section = set([])
+
 
     # 读取带有通信矩阵的数据
-    def read_and_store_data_with_can_matrix(self, path, line_number):
-        # self.origin_data = pd.read_excel(Path, encoding='utf-8', nrows=1000)
-        self.origin_data = pd.read_excel(path, encoding='utf-8', nrows=line_number)
-        print(self.origin_data.head(5))
-
+    def store_data_with_can_matrix(self):
         # 构建基础整理数据
         for index, row in self.origin_data.iterrows():
             tmp = Single_Data()
             tmp.can_id = row['can_id']
             tmp.time = row['time']
             tmp_str_data = ""
-            for i in range(0, 8):
+            for i in range(0, row['length']):
                 in_index = 'data' + str(i)
                 tmp_single_str = str(row[in_index])
                 if len(tmp_single_str) == 1:
@@ -89,14 +120,16 @@ class Data():
                 # 第四类，可以直接忽略
                 classfy_result.classfy_class = 3
                 classfy_result.classfy_score = length
-
+            '''
             # 打印所有的分类结果
             print(str(classfy_result.classfy_begin_loc) + " " +
                   str(end_loc) + " " + str(classfy_result.classfy_class) + \
                   " " + str(classfy_result.classfy_score) + " ")
+            '''
         return
 
     def greedy_find_solution(self):
+        self.available_set_section.add((0, self.data_length-1))
         while len(self.available_set_section) != 0:
             for section in self.available_set_section:
                 begin_loc = section[0]
@@ -130,7 +163,7 @@ class Data():
                             else:
                                 if self.no_meaning_class.classfy_score < classfy_result.classfy_score:
                                     self.no_meaning_class = classfy_result
-
+            '''
             if self.const_class is not None:
                 print("const: " + "begin: " + str(self.const_class.classfy_begin_loc) + " length: " + str(
                     self.const_class.classfy_length) + " score: " + str(self.const_class.classfy_score))
@@ -141,10 +174,10 @@ class Data():
                 print("sensor-counter: " + "begin: " + str(self.sensor_counter_class.classfy_begin_loc) + " length: " + str(
                     self.sensor_counter_class.classfy_length) + " score: " + str(self.sensor_counter_class.classfy_score))
             if self.no_meaning_class is not None:
-                print("sensor-counter: " + "begin: " + str(self.no_meaning_class.classfy_begin_loc) + " length: " + str(
+                print("no_meaning_class: " + "begin: " + str(self.no_meaning_class.classfy_begin_loc) + " length: " + str(
                     self.no_meaning_class.classfy_length) + " score: " + str(self.no_meaning_class.classfy_score))
 
-
+            '''
             # 选择最优解的关键函数
             tmp_res = choose_max(self.const_class, self.multi_value_class, self.sensor_counter_class, self.no_meaning_class)
             loc = tmp_res.classfy_begin_loc + tmp_res.classfy_length
@@ -192,11 +225,16 @@ class Data():
                 self.available_set_section.remove((target_b, target_e))
             for item in target_loc:
                 self.available_set_section.add(item)
-            print("已经完成分类过程")
+            #print("已经完成分类过程")
 
-    def show_results(self):
-        print(len(self.final_res))
+    def save_results(self):
+        self.result_dict['can_id'].append(self.can_id)
         for classfy_result in self.final_res:
+            self.result_dict['start_bit'].append(classfy_result.classfy_begin_loc)
+            self.result_dict['end_bit'].append(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1)
+            self.result_dict['type'].append(classfy_result.classfy_class)
+            self.result_dict['can_id'].append('')
             print(str(classfy_result.classfy_begin_loc) + " " + \
                   str(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1) \
                   + " " + str(classfy_result.classfy_class) + " " + str(classfy_result.classfy_score) + " ")
+        self.result_dict['can_id'].pop()
