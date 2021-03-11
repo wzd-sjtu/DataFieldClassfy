@@ -2,9 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="49844556-b289-4174-8c66-f1193261a40b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/csv-plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/csv-plugin.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/field_split_algorithm.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/field_split_algorithm.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whole_project/data_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/whole_project/data_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whole_project/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/whole_project/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/whole_project/used_class.py" beforeDir="false" afterPath="$PROJECT_DIR$/whole_project/used_class.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,7 +37,29 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.main (1)">
+    <configuration name="main (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="field_split_algorithm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/whole_project" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/whole_project/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="field_split_algorithm" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -81,6 +106,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.main (1)" />
         <item itemvalue="Python.main" />
         <item itemvalue="Python.single_function" />
       </list>
@@ -105,6 +131,7 @@
       <workItem from="1614911132740" duration="20000" />
       <workItem from="1614923405616" duration="882000" />
       <workItem from="1614927091591" duration="896000" />
+      <workItem from="1615453367632" duration="10487000" />
     </task>
     <servers />
   </component>
@@ -112,22 +139,22 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1877" height="397" key="GridCell.Tab.0.bottom" timestamp="1614840091701">
+    <state width="1877" height="386" key="GridCell.Tab.0.bottom" timestamp="1615468088974">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1877" height="397" key="GridCell.Tab.0.bottom/0.0.1920.1050@0.0.1920.1050" timestamp="1614840091701" />
-    <state width="1877" height="397" key="GridCell.Tab.0.center" timestamp="1614840091701">
+    <state width="1877" height="386" key="GridCell.Tab.0.bottom/0.0.1920.1050@0.0.1920.1050" timestamp="1615468088974" />
+    <state width="1877" height="386" key="GridCell.Tab.0.center" timestamp="1615468088974">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1877" height="397" key="GridCell.Tab.0.center/0.0.1920.1050@0.0.1920.1050" timestamp="1614840091701" />
-    <state width="1877" height="397" key="GridCell.Tab.0.left" timestamp="1614840091701">
+    <state width="1877" height="386" key="GridCell.Tab.0.center/0.0.1920.1050@0.0.1920.1050" timestamp="1615468088974" />
+    <state width="1877" height="386" key="GridCell.Tab.0.left" timestamp="1615468088974">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1877" height="397" key="GridCell.Tab.0.left/0.0.1920.1050@0.0.1920.1050" timestamp="1614840091701" />
-    <state width="1877" height="397" key="GridCell.Tab.0.right" timestamp="1614840091701">
+    <state width="1877" height="386" key="GridCell.Tab.0.left/0.0.1920.1050@0.0.1920.1050" timestamp="1615468088974" />
+    <state width="1877" height="386" key="GridCell.Tab.0.right" timestamp="1615468088974">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state width="1877" height="397" key="GridCell.Tab.0.right/0.0.1920.1050@0.0.1920.1050" timestamp="1614840091701" />
+    <state width="1877" height="386" key="GridCell.Tab.0.right/0.0.1920.1050@0.0.1920.1050" timestamp="1615468088974" />
     <state width="1877" height="352" key="GridCell.Tab.1.bottom" timestamp="1614829378050">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
@@ -148,14 +175,14 @@
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="60" y="262" key="IDE.errors.dialog/0.0.1920.1050@0.0.1920.1050" timestamp="1614839890618" />
-    <state x="0" y="170" key="SettingsEditor" timestamp="1614848341403">
+    <state x="0" y="170" key="SettingsEditor" timestamp="1615453391674">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state x="0" y="170" key="SettingsEditor/0.0.1920.1050@0.0.1920.1050" timestamp="1614848341403" />
-    <state x="645" y="348" key="com.intellij.ide.util.TipDialog" timestamp="1614868874566">
+    <state x="0" y="170" key="SettingsEditor/0.0.1920.1050@0.0.1920.1050" timestamp="1615453391674" />
+    <state x="645" y="348" key="com.intellij.ide.util.TipDialog" timestamp="1615453365959">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state x="645" y="348" key="com.intellij.ide.util.TipDialog/0.0.1920.1050@0.0.1920.1050" timestamp="1614868874566" />
+    <state x="645" y="348" key="com.intellij.ide.util.TipDialog/0.0.1920.1050@0.0.1920.1050" timestamp="1615453365959" />
     <state x="143" y="233" width="672" height="678" key="search.everywhere.popup" timestamp="1614772309327">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
@@ -164,5 +191,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/field_split_algorithm$single_function.coverage" NAME="single_function Coverage Results" MODIFIED="1614762113458" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/field_split_algorithm$main.coverage" NAME="main Coverage Results" MODIFIED="1614923508674" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/field_classfy$main.coverage" NAME="main Coverage Results" MODIFIED="1615460505648" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/field_classfy$main__1_.coverage" NAME="main (1) Coverage Results" MODIFIED="1615467568005" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/whole_project" />
   </component>
 </project>

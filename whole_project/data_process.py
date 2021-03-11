@@ -4,14 +4,23 @@ from used_class import hex_str_to_binary_str, \
     Classfy_Results
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
+
 
 path = ".././source/origin_source/data.csv"
 write_path = ".././source/origin_source/result.csv"
 nrows = 1000000
 
 
-
+# 感觉并没有封装的作用，搞得人十分迷惑
+# 如何利用面向对象提高程序运行效率？暂时是未知的
 class Data():
+    const_tag = 0
+    multi_value_tag = 1
+    sensor_or_counter_tag = 2
+    sensor_tag = 2
+    counter_tag = 3
+    no_meaning_tag = 4
     def __init__(self):
         self.all_data = pd.read_csv(path,  nrows=nrows)
         self.CANID_set = set(self.all_data['can_id'])
@@ -21,7 +30,8 @@ class Data():
         self.result_dict['end_bit']=[]
         self.result_dict['type']=[]
 
-
+    # 处理所有数据集的过程
+    def classfing_all_data(self):
         for can_id in self.CANID_set:
             self.can_id = can_id
             self.origin_data = self.all_data.loc[self.all_data["can_id"] == can_id]
@@ -41,8 +51,25 @@ class Data():
         
         self.result_dataframe = pd.DataFrame(data = self.result_dict,columns=['can_id','start_bit','end_bit','type'])
         self.result_dataframe.to_csv(write_path,index=False,sep=',')
-    
+    # 处理单个数据集的过程
+    def classfying_single_data(self,path, nrows):
+        self.reset()
+        self.store_data_with_can_matrix_for_single_canid(path, nrows)
+        self.set_data_length()
+
+        # 进行分类
+        self.initial_classfy_data()
+        self.process_classfy_data()
+
+        # 贪心算法求最优解
+        self.greedy_find_solution()
+
+        # 显示
+        self.show_results()
+    # 每一次reset都会进行复杂的操作的
+    # 下面给出基本的代码
     def reset(self):
+        # 源数据的位置就是在这里的
         self.data_list = []
         self.data_length = 0
         # classfy_results_list是分好类的数据
@@ -52,6 +79,7 @@ class Data():
         self.const_class = None
         self.multi_value_class = None
         self.sensor_counter_class = None
+        # no_meaning_class 是不进行处理的类？直接忽略这里的影响了
         self.no_meaning_class = None
 
         self.loc = 0
@@ -77,10 +105,36 @@ class Data():
 
             tmp.data_in_binary = hex_str_to_binary_str(tmp_str_data)
             self.data_list.append(tmp)
+
+    # 读取带有通信矩阵的数据，存储仅仅有一个
+    def store_data_with_can_matrix_for_single_canid(self, path, line_number):
+        # self.origin_data = pd.read_excel(Path, encoding='utf-8', nrows=1000)
+        self.origin_data = pd.read_excel(path, encoding='utf-8', nrows=line_number)
+        print(self.origin_data.head(5))
+
+        # 构建基础整理数据
+        for index, row in self.origin_data.iterrows():
+            tmp = Single_Data()
+            tmp.can_id = row['can_id']
+            tmp.time = row['time']
+            tmp_str_data = ""
+            for i in range(0, 8):
+                in_index = 'data' + str(i)
+                tmp_single_str = str(row[in_index])
+                if len(tmp_single_str) == 1:
+                    tmp_single_str = '0' + tmp_single_str
+                tmp_str_data = tmp_str_data + tmp_single_str
+            tmp.data_in_hex = tmp_str_data
+
+            tmp.data_in_binary = hex_str_to_binary_str(tmp_str_data)
+            self.data_list.append(tmp)
     # 应当先导入数据集，再设置数据字段长度
+    # 应当先导入数据集，再设置数据字段长度
+    # 数据字段的设置，给了程序多态性的特征，提高了程序的适用性
     def set_data_length(self):
         self.data_length = len(self.data_list[0].data_in_binary)
         return
+    # 每一个分类都被存储，免去了后文考虑下标的问题
     def initial_classfy_data(self):
         for i in range(0, self.data_length):
             for j in range(0, self.data_length - i):
@@ -103,23 +157,51 @@ class Data():
             # 以下的注释代表了许多种情况的
             if len(s) == 1:
                 # classfy_result.classfy_class = "const"
-                classfy_result.classfy_class = 0
+                classfy_result.classfy_class = self.const_tag
                 classfy_result.classfy_score = length
+
+                # 这里默认是list存储数据范围
+                # value_type是否有必要呢？貌似没有必要性
+                # classfy_result.classfy_value_type = 0
+                classfy_result.classfy_value_store = []
+                for str_binary_value in s:
+                    classfy_result.classfy_value_store.append(int(str_binary_value, 2))
+
             # elif len(s) <= min(2**(0.5*length), 12):
             elif len(s) <= min(2**(0.5*length), 12) and length >= 3:
                 # classfy_result.classfy_class = "multi-value"
-                classfy_result.classfy_class = 1
+                classfy_result.classfy_class = self.multi_value_tag
                 classfy_result.classfy_score = length
+
+                # classfy_result.classfy_value_type = 0
+                classfy_result.classfy_value_store = []
+                for str_binary_value in s:
+                    classfy_result.classfy_value_store.append(int(str_binary_value, 2))
+
             elif length >= 3:
                 # classfy_result.classfy_class = "sensor or counter"
                 # 以下是score的计算方法
-                classfy_result.classfy_class = 2
+
+                # 这两个类的区分方法有点懵逼了
+
+                classfy_result.classfy_class = self.sensor_or_counter_tag
                 classfy_result.classfy_score = (len(s) * len(s) / 2 ** length)
+
+                classfy_result.classfy_value_store = []
+                middle_no_use_list = []
+                for str_binary_value in s:
+                    middle_no_use_list.append(int(str_binary_value, 2))
+
+                classfy_result.classfy_value_store.append(min(middle_no_use_list))
+                classfy_result.classfy_value_store.append(max(middle_no_use_list))
+
                 # classfy_result.classfy_score = (len(s) / 2 ** length)
             else:
                 # 第四类，可以直接忽略
-                classfy_result.classfy_class = 3
+                classfy_result.classfy_class = self.no_meaning_tag
                 classfy_result.classfy_score = length
+
+                classfy_result.classfy_value_store = []
             '''
             # 打印所有的分类结果
             print(str(classfy_result.classfy_begin_loc) + " " +
@@ -139,25 +221,25 @@ class Data():
                 for classfy_result in self.classfy_results_list:
                     if classfy_result.classfy_begin_loc >= begin_loc and \
                             classfy_result.classfy_length + classfy_result.classfy_begin_loc - 1 <= end_loc:
-                        if classfy_result.classfy_class == 0:
+                        if classfy_result.classfy_class == self.const_tag:
                             if self.const_class is None:
                                 self.const_class = classfy_result
                             else:
                                 if self.const_class.classfy_score < classfy_result.classfy_score:
                                     self.const_class = classfy_result
-                        elif classfy_result.classfy_class == 1:
+                        elif classfy_result.classfy_class == self.multi_value_tag:
                             if self.multi_value_class is None:
                                 self.multi_value_class = classfy_result
                             else:
                                 if self.multi_value_class.classfy_score < classfy_result.classfy_score:
                                     self.multi_value_class = classfy_result
-                        elif classfy_result.classfy_class == 2:
+                        elif classfy_result.classfy_class == self.sensor_or_counter_tag:
                             if self.sensor_counter_class is None:
                                 self.sensor_counter_class = classfy_result
                             else:
                                 if self.sensor_counter_class.classfy_score < classfy_result.classfy_score:
                                     self.sensor_counter_class = classfy_result
-                        elif classfy_result.classfy_class == 3:
+                        elif classfy_result.classfy_class == self.no_meaning_tag:
                             if self.no_meaning_class is None:
                                 self.no_meaning_class = classfy_result
                             else:
@@ -238,3 +320,44 @@ class Data():
                   str(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1) \
                   + " " + str(classfy_result.classfy_class) + " " + str(classfy_result.classfy_score) + " ")
         self.result_dict['can_id'].pop()
+
+    def show_results(self):
+        print(len(self.final_res))
+        for classfy_result in self.final_res:
+            print(str(classfy_result.classfy_begin_loc) + " " + \
+                  str(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1) \
+                  + " " + str(classfy_result.classfy_class) + " " + str(classfy_result.classfy_score) + " ")
+            for number in classfy_result.classfy_value_store:
+                # 将二进制数字打印出来，方便程序调试
+                print(bin(number))
+                # 大致上稍微改了一下逻辑
+            print("          ")
+    # 这个新的函数，检查是传感器还是计数器，需要有某个特定的判断条件
+    def check_sensor_or_counter(self):
+        # 用于控制输出的内容
+        times = 0
+
+        for classfy_result in self.final_res:
+            # 表明在这里是计数器类型的
+            if classfy_result.classfy_class == 2:
+                # 在这里需要前向差分序列
+
+                data_in_value = []
+
+                begin_loc = classfy_result.classfy_begin_loc
+                end_loc = classfy_result.classfy_length + begin_loc - 1
+
+                for data in self.data_list:
+                    data_in_value.append(int(data.data_in_binary[begin_loc:end_loc + 1]))
+                length = end_loc - begin_loc + 1
+
+                plt.plot(data_in_value[2800:3000], "o")
+                plt.show()
+                data_in_value = pd.Series(data_in_value)
+                data_in_value = data_in_value.diff()
+                data_in_value = np.unique(data_in_value)
+                print(data_in_value[50:100])
+
+                # 计数器应当只有两个差分，但是别的会有多个差分
+
+
