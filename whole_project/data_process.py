@@ -1,7 +1,7 @@
 # 本文件用于读取数据
 from used_class import hex_str_to_binary_str, \
     choose_max, Single_Data, \
-    Classfy_Results
+    Classfy_Results, choose_max_plus
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -15,11 +15,14 @@ nrows = 1000000
 # 感觉并没有封装的作用，搞得人十分迷惑
 # 如何利用面向对象提高程序运行效率？暂时是未知的
 class Data():
+
+    # 下面是几个类别的名字和数值对照表
     const_tag = 0
     multi_value_tag = 1
     sensor_or_counter_tag = 2
-    sensor_tag = 2
-    counter_tag = 3
+
+    counter_tag = 2
+    sensor_tag = 3
     no_meaning_tag = 4
     def __init__(self):
         self.all_data = pd.read_csv(path,  nrows=nrows)
@@ -29,9 +32,10 @@ class Data():
         self.result_dict['start_bit']=[]
         self.result_dict['end_bit']=[]
         self.result_dict['type']=[]
-
+        self.result_dict['value_range'] = []
     # 处理所有数据集的过程
     def classfing_all_data(self):
+        numbers = 0
         for can_id in self.CANID_set:
             self.can_id = can_id
             self.origin_data = self.all_data.loc[self.all_data["can_id"] == can_id]
@@ -48,8 +52,9 @@ class Data():
 
             # 显示
             self.save_results()
-        
-        self.result_dataframe = pd.DataFrame(data = self.result_dict,columns=['can_id','start_bit','end_bit','type'])
+            print("number is" + str(numbers) + can_id)
+            numbers = numbers + 1
+        self.result_dataframe = pd.DataFrame(data = self.result_dict,columns=['can_id','start_bit','end_bit','type','value_range'])
         self.result_dataframe.to_csv(write_path,index=False,sep=',')
     # 处理单个数据集的过程
     def classfying_single_data(self,path, nrows):
@@ -79,6 +84,9 @@ class Data():
         self.const_class = None
         self.multi_value_class = None
         self.sensor_counter_class = None
+        # 加入两个新的类
+        self.sensor_class = None
+        self.counter_class = None
         # no_meaning_class 是不进行处理的类？直接忽略这里的影响了
         self.no_meaning_class = None
 
@@ -144,12 +152,47 @@ class Data():
                 self.classfy_results_list.append(tmp_classfy_data)
         return
     # 处理分类数据，这里面有分类的详细标准
+    def is_okay_with_counter(self, classfy_result):
+        # 标志是否进入循环计数位
+
+        pre_number = None
+        diff_number = None
+        begin_loc = classfy_result.classfy_begin_loc
+        end_loc = classfy_result.classfy_length + begin_loc - 1
+        length = end_loc - begin_loc + 1
+        mod_number = 2**length
+
+        for data in self.data_list:
+
+            now_number = int(data.data_in_binary[begin_loc:end_loc + 1], 2)
+            '''
+            if begin_loc == 0 and end_loc == 1:
+                print(now_number)
+                print(pre_number)
+                print(mod_number)
+                print("above")
+            '''
+            if pre_number is not None and diff_number is not None:
+                now_diff = (now_number + mod_number - pre_number) % mod_number
+                if now_diff != diff_number:
+                    # print("begin_loc " + str(begin_loc) + " end_loc " + str(end_loc) + " diff_number " + str(now_diff) + " pre_diff " + str(diff_number))
+                    return False
+                else:
+                    pre_number = now_number
+            elif pre_number is None:
+                pre_number = now_number
+            elif diff_number is None:
+                diff_number = now_number - pre_number
+                pre_number = now_number
+        return True
+
     def process_classfy_data(self):
         for classfy_result in self.classfy_results_list:
             s = set([])
             begin_loc = classfy_result.classfy_begin_loc
             end_loc = classfy_result.classfy_length + begin_loc - 1
 
+            # 在这里位置是双闭区间
             for data in self.data_list:
                 s.add(data.data_in_binary[begin_loc:end_loc + 1])
             length = end_loc - begin_loc + 1
@@ -166,6 +209,19 @@ class Data():
                 classfy_result.classfy_value_store = []
                 for str_binary_value in s:
                     classfy_result.classfy_value_store.append(int(str_binary_value, 2))
+            # 计数器的判断明显是有问题的
+            elif self.is_okay_with_counter(classfy_result):
+
+                classfy_result.classfy_class = self.counter_tag
+                classfy_result.classfy_score = (len(s) * len(s) / 2 ** length)
+
+                classfy_result.classfy_value_store = []
+                middle_no_use_list = []
+                for str_binary_value in s:
+                    middle_no_use_list.append(int(str_binary_value, 2))
+                # 计数器认为包含这个区间的
+                classfy_result.classfy_value_store.append(min(middle_no_use_list))
+                classfy_result.classfy_value_store.append(max(middle_no_use_list))
 
             # elif len(s) <= min(2**(0.5*length), 12):
             elif len(s) <= min(2**(0.5*length), 12) and length >= 3:
@@ -182,9 +238,9 @@ class Data():
                 # classfy_result.classfy_class = "sensor or counter"
                 # 以下是score的计算方法
 
-                # 这两个类的区分方法有点懵逼了
-
-                classfy_result.classfy_class = self.sensor_or_counter_tag
+                #
+                # 在这里是传感器？
+                classfy_result.classfy_class = self.sensor_tag
                 classfy_result.classfy_score = (len(s) * len(s) / 2 ** length)
 
                 classfy_result.classfy_value_store = []
@@ -197,7 +253,7 @@ class Data():
 
                 # classfy_result.classfy_score = (len(s) / 2 ** length)
             else:
-                # 第四类，可以直接忽略
+                # 第四类，可以直接忽略,直接忽略貌似有点不太严谨了
                 classfy_result.classfy_class = self.no_meaning_tag
                 classfy_result.classfy_score = length
 
@@ -233,12 +289,21 @@ class Data():
                             else:
                                 if self.multi_value_class.classfy_score < classfy_result.classfy_score:
                                     self.multi_value_class = classfy_result
-                        elif classfy_result.classfy_class == self.sensor_or_counter_tag:
-                            if self.sensor_counter_class is None:
-                                self.sensor_counter_class = classfy_result
+
+                        elif classfy_result.classfy_class == self.counter_tag:
+                            if self.counter_class is None:
+                                self.counter_class = classfy_result
                             else:
-                                if self.sensor_counter_class.classfy_score < classfy_result.classfy_score:
-                                    self.sensor_counter_class = classfy_result
+                                if self.counter_class.classfy_score < classfy_result.classfy_score:
+                                    self.counter_class = classfy_result
+
+                        elif classfy_result.classfy_class == self.sensor_tag:
+                            if self.sensor_class is None:
+                                self.sensor_class = classfy_result
+                            else:
+                                if self.sensor_class.classfy_score < classfy_result.classfy_score:
+                                    self.sensor_class = classfy_result
+
                         elif classfy_result.classfy_class == self.no_meaning_tag:
                             if self.no_meaning_class is None:
                                 self.no_meaning_class = classfy_result
@@ -261,7 +326,12 @@ class Data():
 
             '''
             # 选择最优解的关键函数
-            tmp_res = choose_max(self.const_class, self.multi_value_class, self.sensor_counter_class, self.no_meaning_class)
+            # tmp_res = choose_max(self.const_class, self.multi_value_class, self.sensor_counter_class, self.no_meaning_class)
+            tmp_res = choose_max_plus(self.const_class,
+                                 self.multi_value_class,
+                                 self.counter_class,
+                                 self.sensor_class,
+                                 self.no_meaning_class)
             loc = tmp_res.classfy_begin_loc + tmp_res.classfy_length
             self.final_res.append(tmp_res)
             # print("i am happy:::  " + str(tmp_res.classfy_class))
@@ -270,6 +340,9 @@ class Data():
             self.const_class = None
             self.multi_value_class = None
             self.sensor_counter_class = None
+
+            self.counter_class = None
+            self.sensor_class = None
             self.no_meaning_class = None
 
             begin_loc = tmp_res.classfy_begin_loc
@@ -315,6 +388,7 @@ class Data():
             self.result_dict['start_bit'].append(classfy_result.classfy_begin_loc)
             self.result_dict['end_bit'].append(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1)
             self.result_dict['type'].append(classfy_result.classfy_class)
+            self.result_dict['value_range'].append(classfy_result.classfy_value_store)
             self.result_dict['can_id'].append('')
             print(str(classfy_result.classfy_begin_loc) + " " + \
                   str(classfy_result.classfy_begin_loc + classfy_result.classfy_length - 1) \
@@ -333,6 +407,8 @@ class Data():
                 # 大致上稍微改了一下逻辑
             print("          ")
     # 这个新的函数，检查是传感器还是计数器，需要有某个特定的判断条件
+    # 按位划分时，就需要将sensor和counter直接区分出来，sensor最好用比较复杂的方法进行区分
+    # 以下的check函数可以暂时忽略掉
     def check_sensor_or_counter(self):
         # 用于控制输出的内容
         times = 0
@@ -351,7 +427,7 @@ class Data():
                     data_in_value.append(int(data.data_in_binary[begin_loc:end_loc + 1]))
                 length = end_loc - begin_loc + 1
 
-                plt.plot(data_in_value[2800:3000], "o")
+                plt.plot(data_in_value[0:5000], "o")
                 plt.show()
                 data_in_value = pd.Series(data_in_value)
                 data_in_value = data_in_value.diff()
@@ -360,4 +436,63 @@ class Data():
 
                 # 计数器应当只有两个差分，但是别的会有多个差分
 
+    def show_counter(self):
+        # 用于控制输出的内容
+        times = 0
 
+        for classfy_result in self.final_res:
+            # 表明在这里是计数器类型的
+            if classfy_result.classfy_class == self.counter_tag:
+                # 在这里需要前向差分序列
+
+                data_in_value = []
+                data_in_value_binary = []
+
+                begin_loc = classfy_result.classfy_begin_loc
+                end_loc = classfy_result.classfy_length + begin_loc - 1
+
+                for data in self.data_list:
+                    data_in_value.append(int(data.data_in_binary[begin_loc:end_loc + 1]))
+                    data_in_value_binary.append(data.data_in_binary[begin_loc:end_loc + 1])
+                length = end_loc - begin_loc + 1
+
+                # plt.plot(np.log2(data_in_value[0:500]), "o")
+                plt.plot(data_in_value_binary[850:900], "o")
+                plt.show()
+
+                # 以下是不太合理的查分过程
+                data_in_value = pd.Series(data_in_value)
+                data_in_value = data_in_value.diff()
+                data_in_value = np.unique(data_in_value)
+                print(data_in_value[50:100])
+
+                # 计数器应当只有两个差分，但是别的会有多个差分
+    def show_sensor(self):
+        # 用于控制输出的内容
+        times = 0
+
+        for classfy_result in self.final_res:
+            # 表明在这里是计数器类型的
+            if classfy_result.classfy_class == self.sensor_tag:
+                # 在这里需要前向差分序列
+
+                data_in_value = []
+                data_in_value_binary = []
+
+                begin_loc = classfy_result.classfy_begin_loc
+                end_loc = classfy_result.classfy_length + begin_loc - 1
+
+                for data in self.data_list:
+                    data_in_value.append(int(data.data_in_binary[begin_loc:end_loc + 1]))
+                    data_in_value_binary.append(data.data_in_binary[begin_loc:end_loc + 1])
+                length = end_loc - begin_loc + 1
+
+                # plt.plot(np.log2(data_in_value[0:500]), "o")
+                plt.plot(data_in_value_binary[0:5000], "o")
+                plt.show()
+
+                # 以下是不太合理的查分过程
+                data_in_value = pd.Series(data_in_value)
+                data_in_value = data_in_value.diff()
+                data_in_value = np.unique(data_in_value)
+                print(data_in_value[50:100])

@@ -24,6 +24,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\whole_project\used_class.py">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

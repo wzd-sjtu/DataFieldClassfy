@@ -10,9 +10,10 @@ class Single_Data:
 class Classfy_Results:
     classfy_begin_loc = None
     classfy_length = None
-    classfy_class = None # 可以是0/1/2 分别代表const、multi-value、snesor/counter 三中类型
+    classfy_class = None # 可以是0/1/2/3/4 分别代表const、multi-value、snesor、counter、no_meaning 五种类型
 
     classfy_value_type = None # type分为0和1  0表示某几个值，1表示取值范围
+    # 使用列表是比较好的
     classfy_value_store = None # 这个是用来存储数据类型的，尽量提高判断的效率
 
     classfy_score = None # 合适的打分
@@ -54,4 +55,15 @@ def choose_max(s1, s2, s3, s4):
     if s4 is not None:
         return s4
     # return None
-    print("unhappy")
+    # print("unhappy")
+def choose_max_plus(s1, s2, s3, s4, s5):
+    if s1 is not None:
+        return s1
+    if s2 is not None:
+        return s2
+    if s3 is not None:
+        return s3
+    if s4 is not None:
+        return s4
+    if s5 is not None:
+        return s5

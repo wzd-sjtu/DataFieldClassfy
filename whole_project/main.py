@@ -7,6 +7,9 @@ if __name__ == '__main__':
     # 首先还原出我原先版本的结构
     # 最少要读入5行数据，否则会报错
     # 首先处理500的数据量级
+
+    target_data.classfing_all_data()
+    '''
     nrows = 5000
 
     # 数据读入并设置基本参数
@@ -23,4 +26,7 @@ if __name__ == '__main__':
 
     # 显示
     target_data.show_results()
-    target_data.check_sensor_or_counter()
+    # target_data.check_sensor_or_counter()
+    target_data.show_counter()
+    target_data.show_sensor()
+    '''
